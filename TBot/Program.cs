@@ -191,7 +191,7 @@ namespace Tbot
                     features.AddOrUpdate(Feature.Harvest, false, HandleStartStopFeatures);
                     features.AddOrUpdate(Feature.FleetScheduler, false, HandleStartStopFeatures);
                     features.AddOrUpdate(Feature.SleepMode, false, HandleStartStopFeatures);
-                    features.AddOrUpdate(Feature.Database, false, HandleStartStopFeatures);
+                    //features.AddOrUpdate(Feature.Database, false, HandleStartStopFeatures);
 
                     Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Initializing data...");
                     celestials = GetPlanets();
@@ -262,7 +262,7 @@ namespace Tbot
                             InitializeSleepMode();
                         return true;
                     case Feature.Database:
-                        if (currentValue)
+                        if (!currentValue)
                             StopDatabase();
                         return false;
                     default:
@@ -433,7 +433,8 @@ namespace Tbot
             features.AddOrUpdate(Feature.BrainOfferOfTheDay, false, HandleStartStopFeatures);
             features.AddOrUpdate(Feature.BrainAutoResearch, false, HandleStartStopFeatures);
             features.AddOrUpdate(Feature.Expeditions, false, HandleStartStopFeatures);
-            features.AddOrUpdate(Feature.Harvest, false, HandleStartStopFeatures);            
+            features.AddOrUpdate(Feature.Harvest, false, HandleStartStopFeatures);
+            features.AddOrUpdate(Feature.Database, false, HandleStartStopFeatures);
         }
 
         private static void ReadSettings()
@@ -1626,12 +1627,15 @@ namespace Tbot
                 {
                     Helpers.WriteLog(LogType.Error, LogSender.Database, "clSQL is null!!!");
                 }
+                List<Celestial> xaCelestialDB;
+                if(xSQL.mGetCelestials(out xaCelestialDB) == enExitFunction.kOk)
+                {
+                    mManageCelestialTables(xaCelestialDB);
+                }
 
-
-                
 
                 DateTime time = GetDateTime();
-                int interval = Helpers.CalcRandomInterval((int)settings.Defender.CheckIntervalMin, (int)settings.Defender.CheckIntervalMax);
+                int interval = 0;
                 if (interval <= 0)
                     interval = Helpers.CalcRandomInterval(IntervalType.SomeSeconds);
                 DateTime newTime = time.AddMilliseconds(interval);
@@ -1657,6 +1661,66 @@ namespace Tbot
                     xaSem[Feature.Database].Release();
             }
         }
+
+        private static void mManageCelestialTables(List<Celestial> xaCelestialDB)
+        {
+            try
+            {
+                if (celestials.Count == xaCelestialDB.Count)
+                {
+                    //Celestial count
+                    //is aligned between
+                    //ogamed and database
+                    return;
+                }
+                else
+                {
+                    if (celestials.Count > xaCelestialDB.Count)
+                    {
+                        //Database has less record than ogamed
+                        //Call the method to insert or update records
+                        foreach (Celestial xCelestialTmp in celestials)
+                        {
+                            try
+                            {
+                                //Check if the db list of celestial has the id
+                                if (xaCelestialDB.Exists(xCelToAdd => xCelToAdd.ID == xCelestialTmp.ID) == false)
+                                {
+                                    //It hasn't --> Add the record
+                                    xSQL.mUpdateSingleCelestials(xCelestialTmp);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (celestials.Count < xaCelestialDB.Count)
+                        {
+                            //Ogamed has less record than ogamed
+                            //Check which records are more
+                            //and delete them
+                            foreach (Celestial xCelestialTmp in xaCelestialDB)
+                            {
+                                //Check if the ogamed celestial list has the id
+                                if (celestials.Exists(xCelToDel => xCelToDel.ID == xCelestialTmp.ID) == false)
+                                    //It hasn't --> Delete the record
+                                    xSQL.mDeleteCelestial(xCelestialTmp.ID);
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                xSQL.mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Defender, (int)LogType.Error, "Exception: " + e.Message);
+            }
+        }
+
         private static void Defender(object state)
         {
             try

@@ -128,48 +128,67 @@ namespace Tbot
                 return enExitFunction.kKo;
             }
         }
+        public enExitFunction mDeleteCelestial(int pIdCelestial)
+        {
+            try
+            {
+                mDeleteTbCelestialBuilding(pIdCelestial);
+                mDeleteTbCelestialConstruction(pIdCelestial);
+                mDeleteTbCelestialDefences(pIdCelestial);
+                mDeleteTbCelestialFacilities(pIdCelestial);
+                mDeleteTbCelestialResources(pIdCelestial);
+                mDeleteTbCelestialShip(pIdCelestial);
+                mDeleteTbCelestialShip(pIdCelestial);
+                mDeleteTbCoordinate(pIdCelestial);
+                mDeleteTbCelestial(pIdCelestial);
+
+                return enExitFunction.kOk;
+            }
+            catch(Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
         
         public enExitFunction mGetCelestials(out List<Celestial> xaCelestial)
         {
             //TODO IMPLEMENTARE
             xaCelestial = null;
-            return enExitFunction.kOk;
+            //return enExitFunction.kOk;
             SQLiteDataReader xLocReader = null;
             try
             {
-                //    string sSQL = @"SELECT * FROM vCelestial";
-                //    SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
-                //    xLocReader = xLocCommand.ExecuteReader();
-                //    if(xLocReader.HasRows == false)
-                //    {
-                //        xaCelestial = null;
-                //        xLocReader.Close();
-                //        return enExitFunction.DoNothing;
-                //    }
+                string sSQL = @"SELECT * FROM vCelestials";
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+                //xLocReader = xLocCommand.ExecuteReader();
+                
 
-                //    DataTable dtCelestial = new DataTable();
-                //    SQLiteDataAdapter xDataAdapter = new SQLiteDataAdapter(xLocCommand);
+                DataTable dtCelestial = new DataTable();
+                SQLiteDataAdapter xDataAdapter = new SQLiteDataAdapter(xLocCommand);
 
-                //    xDataAdapter.Fill(dtCelestial);
-                //    xLocReader.Close();
-                //    if(dtCelestial.Rows.Count <= 0)
-                //    {
-                //        xaCelestial = null;
-                //        return enExitFunction.DoNothing;
-                //    }
-                //    Celestial xCelestial;
-                //    foreach(DataRow xRow in dtCelestial.Rows)
-                //    {
-                //        xCelestial = new Celestial();
-                //        xCelestial.Name = xRow["Name"].ToString();
-                //        xCelestial.Img = xRow["Img"].ToString();
-                //        xCelestial.Diameter = Convert.ToInt32(xRow["Diameter"].ToString());
-                //        xCelestial.Buildings.CrystalMine = Convert.ToInt32(xRow[""])
+                xDataAdapter.Fill(dtCelestial);
+                
+                if(dtCelestial.Rows.Count <= 0)
+                {
+                    xaCelestial = null;
+                    return enExitFunction.DoNothing;
+                }
+                xaCelestial = new List<Celestial>();
+                Celestial xCelestial;
+                foreach(DataRow xRow in dtCelestial.Rows)
+                {
+                    xCelestial = new Celestial();
+                    xCelestial.ID = Convert.ToInt32(xRow["ID"].ToString());
+                    xCelestial.Name = xRow["Name"].ToString();
+                    xCelestial.Img = xRow["Img"].ToString();
+                    xCelestial.Diameter = Convert.ToInt32(xRow["Diameter"].ToString());
+                        
+                        
+                    xaCelestial.Add(xCelestial);
+                }
 
-                //        xaCelestial.Add(xCelestial);
-                //    }
-
-                //    return enExitFunction.kOk;
+                return enExitFunction.kOk;
             }
             catch(Exception ex)
             {
@@ -2255,7 +2274,8 @@ PRAGMA foreign_keys = on;
         {
             try
             {
-
+                if (xCelestial.Buildings == null)
+                    return enExitFunction.kOk;
                 mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.MetalMine, xCelestial.Buildings.MetalMine);
                 mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.CrystalMine, xCelestial.Buildings.CrystalMine);
                 mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.DeuteriumSynthesizer, xCelestial.Buildings.DeuteriumSynthesizer);
@@ -2376,6 +2396,194 @@ PRAGMA foreign_keys = on;
             }
         }
 
+        private enExitFunction mDeleteTbCelestialBuilding(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialBuildings
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        private enExitFunction mDeleteTbCelestialConstruction(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialConstruction
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+        
+        private enExitFunction mDeleteTbCelestialDefences(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialDefences
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        
+        private enExitFunction mDeleteTbCelestialFacilities(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialFacilities
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        
+        private enExitFunction mDeleteTbCelestialResources(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialResources
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        
+
+        private enExitFunction mDeleteTbCelestialShip(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestialShip
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        
+        private enExitFunction mDeleteTbCoordinate(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCoordinate
+                              WHERE pIdCelestial = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+        
+        private enExitFunction mDeleteTbCelestial(int pIdCelestial)
+        {
+            try
+            {
+                string sSQL = @"DELETE 
+                              FROM tbCelestial
+                              WHERE ID = @pIdCelestial";
+
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
         /******************************************END PRIVATE METHOD ********************************/
 
     }
