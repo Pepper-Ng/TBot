@@ -1675,7 +1675,7 @@ namespace Tbot
                     mManageCelestial(xaCelestialDB);
                     mManageCelestialBuildings(xaCelestialDB);
                     //Work in progress
-                    //mManageCelestialDefences(xaCelestialDB);
+                    mManageCelestialDefences(xaCelestialDB);
                 }
 
 
@@ -1876,22 +1876,17 @@ namespace Tbot
                 bool bHasToUpdate = false;
                 Celestial xCelTmpUpdate = new Celestial();
 
-
-                //for (int i = 0; i < celestials.Count(); i++)
-                //{
-                //    celestials[i].Defences = ogamedService.GetDefences(celestials[i]);
-                //}
-
-
-                //celestials = //xaCelestialTmpUpdate;
                 Celestial xCelestialTmpDb = new Celestial();
                 foreach (Celestial xCelestial in celestials)
                 {
-                    if (xCelestial.Defences == null)
-                    {
-                        continue;
-                    }
+                    xCelestial.Defences = ogamedService.GetDefences(xCelestial);
+
                     xCelestialTmpDb = xaCelestialDB.Find(x => x.ID == xCelestial.ID);
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.RocketLauncher != xCelestialTmpDb.Defences.RocketLauncher)
+                            bHasToUpdate = true;
+                    }
                     if (bHasToUpdate == false)
                     {
                         if (xCelestial.Defences.LightLaser != xCelestialTmpDb.Defences.LightLaser)
@@ -1940,7 +1935,7 @@ namespace Tbot
 
                     if (bHasToUpdate == true)
                     {
-                        xSQL.mUpdateSingleTbCelestialBuildings(xCelestial);
+                        xSQL.mUpdateSingleTbCelestialDefences(xCelestial);
                         bUpdated = true;
                     }
 

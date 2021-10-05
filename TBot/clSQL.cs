@@ -192,7 +192,7 @@ namespace Tbot
         {
             try
             {
-                if (xCelestial.Buildings == null)
+                if (xCelestial.Defences == null)
                     return enExitFunction.kOk;
                 mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.RocketLauncher, xCelestial.Defences.RocketLauncher);
                 mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.LightLaser, xCelestial.Defences.LightLaser);
@@ -385,7 +385,7 @@ namespace Tbot
 
 
                 string sSQL = @"--
--- File generated with SQLiteStudio v3.2.1 on mer set 29 20:54:09 2021
+-- File generated with SQLiteStudio v3.2.1 on mar ott 5 22:38:15 2021
 --
 -- Text encoding used: System
 --
@@ -528,51 +528,6 @@ CREATE TABLE tbCelestial (
     )
 );
 
-INSERT INTO tbCelestial (
-                            ID,
-                            Img,
-                            Name,
-                            Diameter,
-                            Activity
-                        )
-                        VALUES (
-                            1,
-                            'immagin',
-                            'pippo',
-                            6541,
-                            45
-                        );
-
-INSERT INTO tbCelestial (
-                            ID,
-                            Img,
-                            Name,
-                            Diameter,
-                            Activity
-                        )
-                        VALUES (
-                            2,
-                            'Immagine2',
-                            'paperino',
-                            7894,
-                            12
-                        );
-
-INSERT INTO tbCelestial (
-                            ID,
-                            Img,
-                            Name,
-                            Diameter,
-                            Activity
-                        )
-                        VALUES (
-                            33621834,
-                            'https://gf2.geo.gfsrv.net/cdna7/1121347d31ef5d450c3b8751b15b64.png',
-                            'Pdor figlio di Kmer',
-                            12800,
-                            0
-                        );
-
 
 -- Table: tbCelestialBuildings
 DROP TABLE IF EXISTS tbCelestialBuildings;
@@ -589,104 +544,7 @@ CREATE TABLE tbCelestialBuildings (
     )
 );
 
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     1,
-                                     28
-                                 );
 
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     2,
-                                     23
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     3,
-                                     24
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     4,
-                                     22
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     5,
-                                     17
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     6,
-                                     0
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     7,
-                                     9
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     8,
-                                     7
-                                 );
-
-INSERT INTO tbCelestialBuildings (
-                                     pIdCelestial,
-                                     pIdBuilding,
-                                     nLevel
-                                 )
-                                 VALUES (
-                                     33621834,
-                                     9,
-                                     5
-                                 );
 
 
 -- Table: tbCelestialConstruction
@@ -719,20 +577,17 @@ CREATE TABLE tbCelestialConstruction (
 DROP TABLE IF EXISTS tbCelestialDefences;
 
 CREATE TABLE tbCelestialDefences (
-    pIdCelestialDefences INTEGER PRIMARY KEY AUTOINCREMENT
-                                 NOT NULL,
-    pIdCelestial         INTEGER,
-    pIdDefence           INTEGER,
-    nQuantity            INTEGER,
-    FOREIGN KEY (
-        pIdCelestial
-    )
-    REFERENCES tbCelestial (ID),
-    FOREIGN KEY (
+    pIdCelestial INTEGER NOT NULL
+                         REFERENCES tbCelestial (ID),
+    pIdDefence   INTEGER NOT NULL
+                         REFERENCES tbDefences (pIdDefence),
+    nQuantity    INTEGER,
+    PRIMARY KEY (
+        pIdCelestial,
         pIdDefence
     )
-    REFERENCES tbDefences (pIdDefence) 
 );
+
 
 
 -- Table: tbCelestialFacilities
@@ -1486,8 +1341,8 @@ CREATE VIEW vCelestialDefence_AntiBallisticMissiles AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 9 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 9 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_GaussCannon
@@ -1499,8 +1354,8 @@ CREATE VIEW vCelestialDefence_GaussCannon AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 4 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 4 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_HeavyLaser
@@ -1512,8 +1367,8 @@ CREATE VIEW vCelestialDefence_HeavyLaser AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 3 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 3 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_InterplanetaryMissiles
@@ -1525,8 +1380,8 @@ CREATE VIEW vCelestialDefence_InterplanetaryMissiles AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 10 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 10 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_IonCannon
@@ -1538,8 +1393,8 @@ CREATE VIEW vCelestialDefence_IonCannon AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 5 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 5 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_LargeShieldDome
@@ -1551,8 +1406,8 @@ CREATE VIEW vCelestialDefence_LargeShieldDome AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 8 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 8 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_LightLaser
@@ -1564,8 +1419,8 @@ CREATE VIEW vCelestialDefence_LightLaser AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 2 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 2 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_PlasmaTurret
@@ -1577,8 +1432,8 @@ CREATE VIEW vCelestialDefence_PlasmaTurret AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 6 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 6 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_RocketLauncher
@@ -1590,8 +1445,8 @@ CREATE VIEW vCelestialDefence_RocketLauncher AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 1 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 1 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefence_SmallShieldDome
@@ -1603,8 +1458,8 @@ CREATE VIEW vCelestialDefence_SmallShieldDome AS
       FROM tbCelestial
            LEFT OUTER JOIN
            tbCelestialDefences ON tbCelestial.ID = tbCelestialDefences.pIdCelestial
-     WHERE tbCelestialDefences.pIdCelestialDefences = 7 OR 
-           tbcelestialDefences.pIdCelestialDefences IS NULL;
+     WHERE tbCelestialDefences.pIdDefence = 7 OR 
+           tbCelestialDefences.pIdDefence IS NULL;
 
 
 -- View: vCelestialDefences
@@ -1870,6 +1725,7 @@ CREATE VIEW vCelestialResources AS
 DROP VIEW IF EXISTS vCelestials;
 CREATE VIEW vCelestials AS
     SELECT tbCelestial.ID,
+           tbCelestial.Img,
            tbCelestial.Name,
            tbCelestial.Diameter,
            tbCelestial.Activity,
@@ -2217,6 +2073,7 @@ CREATE VIEW vCelestialShips AS
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
 
+
 ";
 
                 SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
@@ -2474,7 +2331,7 @@ PRAGMA foreign_keys = on;
                 //the second part of the query (UPDATE) and the record will be updated
                 string sSQL = @"INSERT INTO tbCelestialDefences (pIdCelestial,pIdDefence,nQuantity)
                               VALUES(@pIdCelestial, @pIdDefence, @nQty)
-                              ON CONFLICT(pIdCelestial,pIdBuilding) DO UPDATE SET nLevel = @nLevel WHERE pIdCelestial = @pIdCelestial AND pIdBuilding = @pIdBuilding ";
+                              ON CONFLICT(pIdCelestial,pIdDefence) DO UPDATE SET nQuantity = @nQty WHERE pIdCelestial = @pIdCelestial AND pIdDefence = @pIdDefence ";
 
                 //Creating a command with sSQL as commandText and xDbMasterConnection as SQLiteConnection
                 SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
