@@ -32,8 +32,9 @@ namespace Tbot
         static volatile Researches researches;
         static volatile ConcurrentDictionary<Feature, bool> features;
         static volatile List<FleetSchedule> scheduledFleets;
+        static volatile List<Celestial> xaCelestialDB;
         static volatile bool isSleeping;
-
+        static volatile int nContGiri = 0;
         static clSQL xSQL;
 
         /*Lorenzo 07/02/2021
@@ -178,6 +179,7 @@ namespace Tbot
                     xaSem[Feature.FleetScheduler] = new Semaphore(1, 1); //FleetScheduler
                     xaSem[Feature.SleepMode] = new Semaphore(1, 1); //SleepMode
                     xaSem[Feature.Database] = new Semaphore(1, 1); //Database
+                    xaSem[Feature.Database] = new Semaphore(1, 1); //Database
 
                     features = new();
                     features.AddOrUpdate(Feature.Defender, false, HandleStartStopFeatures);
@@ -192,13 +194,10 @@ namespace Tbot
                     features.AddOrUpdate(Feature.FleetScheduler, false, HandleStartStopFeatures);
                     features.AddOrUpdate(Feature.SleepMode, false, HandleStartStopFeatures);
                     //features.AddOrUpdate(Feature.Database, false, HandleStartStopFeatures);
-
+                    xSQL.mInit();
                     Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Initializing data...");
-                    celestials = GetPlanets();
-                    researches = ogamedService.GetResearches();
-                    celestials = UpdatePlanets(UpdateType.Buildings);
                     scheduledFleets = new();
-                    xSQL.mUpdateSingleCelestials(celestials[0]);
+                    
                     Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Initializing features...");
                     InitializeFeatures();
                 }
@@ -619,15 +618,16 @@ namespace Tbot
                         planet.Resources = ogamedService.GetResources(planet);
                         planet.Productions = ogamedService.GetProductions(planet);
                         planet.Constructions = ogamedService.GetConstructions(planet);
+                        
+                        planet.Buildings = ogamedService.GetBuildings(planet);
+                        planet.Facilities = ogamedService.GetFacilities(planet);
+                        planet.Ships = ogamedService.GetShips(planet);
+                        planet.Defences = ogamedService.GetDefences(planet);
                         if (planet is Planet)
                         {
                             planet.ResourceSettings = ogamedService.GetResourceSettings(planet as Planet);
                             planet.ResourceProduction = ogamedService.GetResourceProduction(planet as Planet);
                         }
-                        planet.Buildings = ogamedService.GetBuildings(planet);
-                        planet.Facilities = ogamedService.GetFacilities(planet);
-                        planet.Ships = ogamedService.GetShips(planet);
-                        planet.Defences = ogamedService.GetDefences(planet);
                         break;
                 }
             }
@@ -650,7 +650,41 @@ namespace Tbot
                     serverInfo = UpdateServerInfo();
                     serverData = UpdateServerData();
                     userInfo = UpdateUserInfo();
-                    celestials = UpdateCelestials();
+                    /* Lorenzo 02/10/2021
+                     * 
+                     * IMPORTANT!!!!!!!!!!
+                     * 
+                     * Modify the update type of celestials
+                     * 
+                     * Before it was always an overwrite of 
+                     * List<Celestial>celestials
+                     * 
+                     * now is only an update because HandleDatabase
+                     * also use this List and it has problems about
+                     * buildings and so on because every time they 
+                     * will be reset without this control
+                     */
+                    if (celestials == null)
+                        celestials = UpdateCelestials();
+                    else
+                    {
+                        List<Celestial> xaCelestialTmp = UpdateCelestials();
+
+                        foreach (Celestial xCelestialCmp in xaCelestialTmp)
+                        {
+                            //if celestials hasn't a record
+                            //it will be added
+                            if (celestials.Exists(x => x.ID == xCelestialCmp.ID) == false)
+                                celestials.Add(xCelestialCmp);
+                        }
+                        foreach(Celestial xCelestialTmp in celestials)
+                        {
+                            //if celestials has a record that isn't still
+                            //existing in ogamed it will be deleted
+                            if (xaCelestialTmp.Exists(x => x.ID == xCelestialTmp.ID) == false)
+                                celestials.Remove(xCelestialTmp);
+                        }
+                    }
                     researches = UpdateResearches();
                 }
                 string title = "[" + serverInfo.Name + "." + serverInfo.Language + "]" + " " + userInfo.PlayerName + " - Rank: " + userInfo.Rank + " - http://" + (string)settings.General.Host + ":" + (string)settings.General.Port;
@@ -1616,6 +1650,14 @@ namespace Tbot
                 xaSem[Feature.Database].WaitOne();
                 Helpers.WriteLog(LogType.Info, LogSender.Database, "Checking database...");
 
+                //if (nContGiri < 10)
+                //    nContGiri++;
+                //if(nContGiri == 10)
+                //{
+                //    celestials = UpdatePlanets(UpdateType.Full);
+                //}
+
+
                 if (isSleeping)
                 {
                     Helpers.WriteLog(LogType.Info, LogSender.Defender, "Skipping: Sleep Mode Active!");
@@ -1623,14 +1665,17 @@ namespace Tbot
                     return;
                 }
 
-                if(xSQL == null)
+                if (xSQL == null)
                 {
                     Helpers.WriteLog(LogType.Error, LogSender.Database, "clSQL is null!!!");
                 }
-                List<Celestial> xaCelestialDB;
-                if(xSQL.mGetCelestials(out xaCelestialDB) == enExitFunction.kOk)
+
+                if (xSQL.mGetCelestials(out xaCelestialDB) == enExitFunction.kOk)
                 {
-                    mManageCelestialTables(xaCelestialDB);
+                    mManageCelestial(xaCelestialDB);
+                    mManageCelestialBuildings(xaCelestialDB);
+                    //Work in progress
+                    //mManageCelestialDefences(xaCelestialDB);
                 }
 
 
@@ -1662,11 +1707,13 @@ namespace Tbot
             }
         }
 
-        private static void mManageCelestialTables(List<Celestial> xaCelestialDB)
+        private static void mManageCelestial(List<Celestial> xaCelestialRd)
         {
             try
             {
-                if (celestials.Count == xaCelestialDB.Count)
+                if (celestials == null)
+                    celestials = UpdateCelestials();
+                if (celestials.Count == xaCelestialRd.Count)
                 {
                     //Celestial count
                     //is aligned between
@@ -1675,7 +1722,7 @@ namespace Tbot
                 }
                 else
                 {
-                    if (celestials.Count > xaCelestialDB.Count)
+                    if (celestials.Count > xaCelestialRd.Count)
                     {
                         //Database has less record than ogamed
                         //Call the method to insert or update records
@@ -1684,7 +1731,7 @@ namespace Tbot
                             try
                             {
                                 //Check if the db list of celestial has the id
-                                if (xaCelestialDB.Exists(xCelToAdd => xCelToAdd.ID == xCelestialTmp.ID) == false)
+                                if (xaCelestialRd.Exists(xCelToAdd => xCelToAdd.ID == xCelestialTmp.ID) == false)
                                 {
                                     //It hasn't --> Add the record
                                     xSQL.mUpdateSingleCelestials(xCelestialTmp);
@@ -1698,12 +1745,12 @@ namespace Tbot
                     }
                     else
                     {
-                        if (celestials.Count < xaCelestialDB.Count)
+                        if (celestials.Count < xaCelestialRd.Count)
                         {
                             //Ogamed has less record than ogamed
                             //Check which records are more
                             //and delete them
-                            foreach (Celestial xCelestialTmp in xaCelestialDB)
+                            foreach (Celestial xCelestialTmp in xaCelestialRd)
                             {
                                 //Check if the ogamed celestial list has the id
                                 if (celestials.Exists(xCelToDel => xCelToDel.ID == xCelestialTmp.ID) == false)
@@ -1717,7 +1764,196 @@ namespace Tbot
             }
             catch (Exception ex)
             {
-                xSQL.mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Defender, (int)LogType.Error, "Exception: " + e.Message);
+                xSQL.mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Defender, (int)LogType.Error, "Exception: " + ex.Message);
+            }
+        }
+
+
+        private static void mManageCelestialBuildings(List<Celestial> xaCelestialRd)
+        {
+            try
+            {
+                bool bUpdated = false;
+                bool bHasToUpdate = false;
+                Celestial xCelTmpUpdate = new Celestial();
+                if (nContGiri < 10)
+                    nContGiri += 1;
+                else
+                {
+                    //Update buildings every 10 times
+                    foreach (Celestial xCelUpdate in celestials)
+                    {
+                        //Update buildings only on planet
+                        if (xCelUpdate.Coordinate.Type == Celestials.Planet)
+                            xCelUpdate.Buildings = ogamedService.GetBuildings(xCelUpdate);
+                    }
+                }
+
+                
+                //celestials = //xaCelestialTmpUpdate;
+                Celestial xCelestialTmpDb = new Celestial();
+                foreach(Celestial xCelestial in celestials)
+                {
+                    if(xCelestial.Coordinate.Type != Celestials.Planet)
+                    {
+                        continue;
+                    }
+                    if(xCelestial.Buildings == null)
+                    {
+                        continue;
+                    }
+                    xCelestialTmpDb = xaCelestialDB.Find(x => x.ID == xCelestial.ID);
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.MetalMine != xCelestialTmpDb.Buildings.MetalMine)
+                            bHasToUpdate = true;
+                    }
+                    if(bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.CrystalMine != xCelestialTmpDb.Buildings.CrystalMine)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.DeuteriumSynthesizer != xCelestialTmpDb.Buildings.DeuteriumSynthesizer)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.SolarPlant != xCelestialTmpDb.Buildings.SolarPlant)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.FusionReactor != xCelestialTmpDb.Buildings.FusionReactor)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.SolarSatellite != xCelestialTmpDb.Buildings.SolarSatellite)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.MetalStorage != xCelestialTmpDb.Buildings.MetalStorage)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.CrystalStorage != xCelestialTmpDb.Buildings.CrystalStorage)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Buildings.DeuteriumTank != xCelestialTmpDb.Buildings.DeuteriumTank)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == true)
+                    {
+                        xSQL.mUpdateSingleTbCelestialBuildings(xCelestial);
+                        bUpdated = true;
+                    }
+
+                    bHasToUpdate = false;
+                }
+
+                if (bUpdated == true)
+                    xSQL.mGetCelestials(out xaCelestialDB);
+
+            }
+            catch (Exception ex)
+            {
+                xSQL.mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Defender, (int)LogType.Error, "Exception: " + ex.Message);
+            }
+        }
+
+        private static void mManageCelestialDefences(List<Celestial> xaCelestialRd)
+        {
+            try
+            {
+
+                bool bUpdated = false;
+                bool bHasToUpdate = false;
+                Celestial xCelTmpUpdate = new Celestial();
+
+
+                //for (int i = 0; i < celestials.Count(); i++)
+                //{
+                //    celestials[i].Defences = ogamedService.GetDefences(celestials[i]);
+                //}
+
+
+                //celestials = //xaCelestialTmpUpdate;
+                Celestial xCelestialTmpDb = new Celestial();
+                foreach (Celestial xCelestial in celestials)
+                {
+                    if (xCelestial.Defences == null)
+                    {
+                        continue;
+                    }
+                    xCelestialTmpDb = xaCelestialDB.Find(x => x.ID == xCelestial.ID);
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.LightLaser != xCelestialTmpDb.Defences.LightLaser)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.HeavyLaser != xCelestialTmpDb.Defences.HeavyLaser)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.GaussCannon != xCelestialTmpDb.Defences.GaussCannon)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.IonCannon != xCelestialTmpDb.Defences.IonCannon)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.PlasmaTurret != xCelestialTmpDb.Defences.PlasmaTurret)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.SmallShieldDome != xCelestialTmpDb.Defences.SmallShieldDome)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.LargeShieldDome != xCelestialTmpDb.Defences.LargeShieldDome)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.AntiBallisticMissiles != xCelestialTmpDb.Defences.AntiBallisticMissiles)
+                            bHasToUpdate = true;
+                    }
+                    if (bHasToUpdate == false)
+                    {
+                        if (xCelestial.Defences.InterplanetaryMissiles != xCelestialTmpDb.Defences.InterplanetaryMissiles)
+                            bHasToUpdate = true;
+                    }
+
+                    if (bHasToUpdate == true)
+                    {
+                        xSQL.mUpdateSingleTbCelestialBuildings(xCelestial);
+                        bUpdated = true;
+                    }
+
+                    bHasToUpdate = false;
+                }
+
+                if (bUpdated == true)
+                    xSQL.mGetCelestials(out xaCelestialDB);
+
+            }
+            catch (Exception ex)
+            {
+                xSQL.mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Defender, (int)LogType.Error, "Exception: " + ex.Message);
             }
         }
 

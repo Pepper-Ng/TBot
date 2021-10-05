@@ -118,7 +118,7 @@ namespace Tbot
             try
             {
                 mUpdateTbCelestial(xCelestial);
-                mUpdateTbCelestialBuildings(xCelestial);
+                mUpdateSingleTbCelestialBuildings(xCelestial);
 
                 return enExitFunction.kOk;
             }
@@ -128,6 +128,104 @@ namespace Tbot
                 return enExitFunction.kKo;
             }
         }
+
+        /*Lorenzo 28/09/2021
+         * 
+         * Method that allow to insert or update all the resources building 
+         * of a single celestial
+         * 
+         * 
+         * PARAMETER IN: 
+         * 
+         *  - Celestial xCelestial: the celestial struct of the planet that you want to update
+         *  
+         *  
+         *  PARAMETER OUT:
+         *  
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
+        public enExitFunction mUpdateSingleTbCelestialBuildings(Celestial xCelestial)
+        {
+            try
+            {
+                if (xCelestial.Buildings == null)
+                    return enExitFunction.kOk;
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.MetalMine, xCelestial.Buildings.MetalMine);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.CrystalMine, xCelestial.Buildings.CrystalMine);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.DeuteriumSynthesizer, xCelestial.Buildings.DeuteriumSynthesizer);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.SolarPlant, xCelestial.Buildings.SolarPlant);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.FusionReactor, xCelestial.Buildings.FusionReactor);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.SolarSatellite, xCelestial.Buildings.SolarSatellite);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.MetalStorage, xCelestial.Buildings.MetalStorage);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.CrystalStorage, xCelestial.Buildings.CrystalStorage);
+                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.DeuteriumTank, xCelestial.Buildings.DeuteriumTank);
+
+                return enExitFunction.kOk;
+                /*foreach (enBuildings xBuilding in (enBuildings[])Enum.GetValues(typeof(enBuildings)))
+                {
+                    mUpdateSingleTbCelestialBuilding(xCelestial.ID, xBuilding, )
+                }*/
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        /*Lorenzo 05/10/2021
+         * 
+         * Method that allow to insert or update all the defences
+         * of a single celestial
+         * 
+         * 
+         * PARAMETER IN: 
+         * 
+         *  - Celestial xCelestial: the celestial struct of the planet that you want to update
+         *  
+         *  
+         *  PARAMETER OUT:
+         *  
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
+        public enExitFunction mUpdateSingleTbCelestialDefences(Celestial xCelestial)
+        {
+            try
+            {
+                if (xCelestial.Buildings == null)
+                    return enExitFunction.kOk;
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.RocketLauncher, xCelestial.Defences.RocketLauncher);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.LightLaser, xCelestial.Defences.LightLaser);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.HeavyLaser, xCelestial.Defences.HeavyLaser);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.GaussCannon, xCelestial.Defences.GaussCannon);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.IonCannon, xCelestial.Defences.IonCannon);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.PlasmaTurret, xCelestial.Defences.PlasmaTurret);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.SmallShieldDome, xCelestial.Defences.SmallShieldDome);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.LargeShieldDome, xCelestial.Defences.LargeShieldDome);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.AntiBallisticMissiles, xCelestial.Defences.AntiBallisticMissiles);
+                mUpdateSingleTbCelestialDefence(xCelestial.ID, enDefences.InterplanetaryMissiles, xCelestial.Defences.InterplanetaryMissiles);
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete a celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: id of the celestial to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         public enExitFunction mDeleteCelestial(int pIdCelestial)
         {
             try
@@ -150,7 +248,18 @@ namespace Tbot
                 return enExitFunction.kKo;
             }
         }
-        
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that gives back the List<Celestial> of celestials on database
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - out List<Celestial> xaCelestial: list of Celestial filled with database data
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         public enExitFunction mGetCelestials(out List<Celestial> xaCelestial)
         {
             //TODO IMPLEMENTARE
@@ -174,18 +283,49 @@ namespace Tbot
                     xaCelestial = null;
                     return enExitFunction.DoNothing;
                 }
-                xaCelestial = new List<Celestial>();
+                if(xaCelestial == null)
+                    xaCelestial = new List<Celestial>();
                 Celestial xCelestial;
+                
                 foreach(DataRow xRow in dtCelestial.Rows)
                 {
                     xCelestial = new Celestial();
+                    if (xCelestial.Buildings == null)
+                        xCelestial.Buildings = new Buildings();
+                    if (xCelestial.Defences == null)
+                        xCelestial.Defences = new Defences();
+                    //tbCelestial
                     xCelestial.ID = Convert.ToInt32(xRow["ID"].ToString());
                     xCelestial.Name = xRow["Name"].ToString();
                     xCelestial.Img = xRow["Img"].ToString();
                     xCelestial.Diameter = Convert.ToInt32(xRow["Diameter"].ToString());
-                        
-                        
+                    //Buildings
+                    xCelestial.Buildings.MetalMine = Convert.ToInt32(xRow["nMetalMine"].ToString());
+                    xCelestial.Buildings.CrystalMine = Convert.ToInt32(xRow["nCrystalMine"].ToString());
+                    xCelestial.Buildings.DeuteriumSynthesizer = Convert.ToInt32(xRow["nDeuteriumSynthesizer"].ToString());
+                    xCelestial.Buildings.SolarPlant = Convert.ToInt32(xRow["nSolarPlant"].ToString());
+                    xCelestial.Buildings.FusionReactor = Convert.ToInt32(xRow["nFusionReactor"].ToString());
+                    xCelestial.Buildings.SolarSatellite = Convert.ToInt32(xRow["nSolarSatelliteBuilding"].ToString());
+                    xCelestial.Buildings.MetalStorage = Convert.ToInt32(xRow["nMetalStorage"].ToString());
+                    xCelestial.Buildings.CrystalStorage = Convert.ToInt32(xRow["nCrystalStorage"].ToString());
+                    xCelestial.Buildings.DeuteriumTank = Convert.ToInt32(xRow["nDeuteriumTank"].ToString());
+
+                    //Defences
+                    xCelestial.Defences.RocketLauncher = Convert.ToInt32(xRow["nRocketLauncher"].ToString());
+                    xCelestial.Defences.LightLaser = Convert.ToInt32(xRow["nLightLaser"].ToString());
+                    xCelestial.Defences.HeavyLaser = Convert.ToInt32(xRow["nHeavyLaser"].ToString());
+                    xCelestial.Defences.GaussCannon = Convert.ToInt32(xRow["nGaussCannon"].ToString());
+                    xCelestial.Defences.IonCannon = Convert.ToInt32(xRow["nIonCannon"].ToString());
+                    xCelestial.Defences.PlasmaTurret = Convert.ToInt32(xRow["nPlasmaTurret"].ToString());
+                    xCelestial.Defences.SmallShieldDome = Convert.ToInt32(xRow["nSmallShieldDome"].ToString());
+                    xCelestial.Defences.LargeShieldDome = Convert.ToInt32(xRow["nLargeShieldDome"].ToString());
+                    xCelestial.Defences.AntiBallisticMissiles = Convert.ToInt32(xRow["nAntiBallisticMissiles"].ToString());
+                    xCelestial.Defences.InterplanetaryMissiles = Convert.ToInt32(xRow["nInterplanetaryMissiles"].ToString());
+                    
+
                     xaCelestial.Add(xCelestial);
+
+                    xCelestial = null;
                 }
 
                 return enExitFunction.kOk;
@@ -2255,49 +2395,7 @@ PRAGMA foreign_keys = on;
                 return enExitFunction.kKo;
             }
         }
-        /*Lorenzo 28/09/2021
-         * 
-         * Method that allow to insert or update all the resources building 
-         * of a single celestial
-         * 
-         * 
-         * PARAMETER IN: 
-         * 
-         *  - Celestial xCelestial: the celestial struct of the planet that you want to update
-         *  
-         *  
-         *  PARAMETER OUT:
-         *  
-         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
-         */
-        private enExitFunction mUpdateTbCelestialBuildings(Celestial xCelestial)
-        {
-            try
-            {
-                if (xCelestial.Buildings == null)
-                    return enExitFunction.kOk;
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.MetalMine, xCelestial.Buildings.MetalMine);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.CrystalMine, xCelestial.Buildings.CrystalMine);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.DeuteriumSynthesizer, xCelestial.Buildings.DeuteriumSynthesizer);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.SolarPlant, xCelestial.Buildings.SolarPlant);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.FusionReactor, xCelestial.Buildings.FusionReactor);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.SolarSatellite, xCelestial.Buildings.SolarSatellite);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.MetalStorage, xCelestial.Buildings.MetalStorage);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.CrystalStorage, xCelestial.Buildings.CrystalStorage);
-                mUpdateSingleTbCelestialBuilding(xCelestial.ID, enBuildings.DeuteriumTank, xCelestial.Buildings.DeuteriumTank);
-
-                return enExitFunction.kOk;
-                /*foreach (enBuildings xBuilding in (enBuildings[])Enum.GetValues(typeof(enBuildings)))
-                {
-                    mUpdateSingleTbCelestialBuilding(xCelestial.ID, xBuilding, )
-                }*/
-            }
-            catch (Exception ex)
-            {
-                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
-                return enExitFunction.kKo;
-            }
-        }
+        
         /*Lorenzo 28/09/2021
          * 
          * Method that allow to insert or update a single resources building 
@@ -2335,6 +2433,56 @@ PRAGMA foreign_keys = on;
                 xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
                 xLocCommand.Parameters.AddWithValue("@pIdBuilding", (int)xBuilding);
                 xLocCommand.Parameters.AddWithValue("@nLevel", nLevel);
+
+                //Execute the query
+                xLocCommand.ExecuteNonQuery();
+
+                return enExitFunction.kOk;
+            }
+            catch (Exception ex)
+            {
+                mLog(MethodBase.GetCurrentMethod().Name, (int)LogSender.Tbot, (int)LogType.Error, "Exception: " + ex.Message);
+                return enExitFunction.kKo;
+            }
+        }
+
+        /*Lorenzo 05/10/2021
+         * 
+         * Method that allow to insert or update a single defence
+         * of a single celestial
+         * 
+         * 
+         * PARAMETER IN: 
+         * 
+         *  - int pIdCelestial: integer that represent the id of the celestial to update
+         *  - enDefences xDefence: integer that represent the defence to update --> Refer to enDefences
+         *  - int nQty: integer that represent the quantity of the defence
+         *  
+         *  
+         *  PARAMETER OUT:
+         *  
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
+        private enExitFunction mUpdateSingleTbCelestialDefence(int pIdCelestial, enDefences xDefence, long nQty)
+        {
+            try
+            {
+                //This SQLite query try to insert into tbCelestialBuildings the record 
+                //with values specified in the 2 row. pIdCelestial and pIdBuilding are a composed primary key, so 
+                //if the insert statement throw an exception caused by a
+                //duplicated primary key (ON CONFLICT(pIdCelestial,pIdBuilding)) it will be executed
+                //the second part of the query (UPDATE) and the record will be updated
+                string sSQL = @"INSERT INTO tbCelestialDefences (pIdCelestial,pIdDefence,nQuantity)
+                              VALUES(@pIdCelestial, @pIdDefence, @nQty)
+                              ON CONFLICT(pIdCelestial,pIdBuilding) DO UPDATE SET nLevel = @nLevel WHERE pIdCelestial = @pIdCelestial AND pIdBuilding = @pIdBuilding ";
+
+                //Creating a command with sSQL as commandText and xDbMasterConnection as SQLiteConnection
+                SQLiteCommand xLocCommand = new SQLiteCommand(sSQL, xDbMasterConnection);
+
+                //Set the query parameters
+                xLocCommand.Parameters.AddWithValue("@pIdCelestial", pIdCelestial);
+                xLocCommand.Parameters.AddWithValue("@pIdDefence", (int)xDefence);
+                xLocCommand.Parameters.AddWithValue("@nQty", nQty);
 
                 //Execute the query
                 xLocCommand.ExecuteNonQuery();
@@ -2396,6 +2544,19 @@ PRAGMA foreign_keys = on;
             }
         }
 
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the buildings related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to buildings to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
+
         private enExitFunction mDeleteTbCelestialBuilding(int pIdCelestial)
         {
             try
@@ -2419,6 +2580,19 @@ PRAGMA foreign_keys = on;
             }
         }
 
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the constuctions related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to constructions to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
+
         private enExitFunction mDeleteTbCelestialConstruction(int pIdCelestial)
         {
             try
@@ -2441,7 +2615,19 @@ PRAGMA foreign_keys = on;
                 return enExitFunction.kKo;
             }
         }
-        
+
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the defences related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to defences to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCelestialDefences(int pIdCelestial)
         {
             try
@@ -2465,7 +2651,18 @@ PRAGMA foreign_keys = on;
             }
         }
 
-        
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the facilities related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to facilities to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCelestialFacilities(int pIdCelestial)
         {
             try
@@ -2489,7 +2686,18 @@ PRAGMA foreign_keys = on;
             }
         }
 
-        
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the resources related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to resources to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCelestialResources(int pIdCelestial)
         {
             try
@@ -2513,8 +2721,19 @@ PRAGMA foreign_keys = on;
             }
         }
 
-        
 
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete all the ships related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID related to ships to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCelestialShip(int pIdCelestial)
         {
             try
@@ -2538,7 +2757,18 @@ PRAGMA foreign_keys = on;
             }
         }
 
-        
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete the coordinate related to a specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID coordinate to ships to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCoordinate(int pIdCelestial)
         {
             try
@@ -2561,7 +2791,18 @@ PRAGMA foreign_keys = on;
                 return enExitFunction.kKo;
             }
         }
-        
+        /* Lorenzo 05/10/2021
+         * 
+         * Method that delete the specific celestial
+         * 
+         * PARAMETER INPUT:
+         * 
+         *  - int pIdCelestial: integer that contains the celestial ID to delete
+         * 
+         * PARAMETER OUTPUT: 
+         * 
+         *  - enExitFunction: enum that could return kOk if the method success, kKo if the method went in exception
+         */
         private enExitFunction mDeleteTbCelestial(int pIdCelestial)
         {
             try

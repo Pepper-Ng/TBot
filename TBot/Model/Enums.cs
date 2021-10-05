@@ -237,7 +237,8 @@ namespace Tbot.Model
 		FleetScheduler = 8,
 		SleepMode = 9,
 		BrainAutoResearch = 10,
-		Database = 11
+		Database = 11,
+		UpdateOgamed = 12
 	}
 
 	/*Stewie 24/09/2021*/
@@ -260,6 +261,20 @@ namespace Tbot.Model
 		MetalStorage = 7,
 		CrystalStorage = 8,
 		DeuteriumTank = 9
+	}
+
+	public enum enDefences
+	{
+		RocketLauncher = 1,
+		LightLaser = 2,
+		HeavyLaser = 3,
+		GaussCannon = 4,
+		IonCannon = 5,
+		PlasmaTurret = 6,
+		SmallShieldDome = 7,
+		LargeShieldDome = 8,
+		AntiBallisticMissiles = 9,
+		InterplanetaryMissiles = 10
 	}
 
 }
