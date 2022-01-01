@@ -1047,4 +1047,30 @@ namespace Tbot.Model {
 			return $"[{GetCelestialCode()}:{Celestial.Coordinate.Galaxy}:{Celestial.Coordinate.System}:{Celestial.Coordinate.Position}]";
 		}
 	}
+
+	public class ResourceMultiplier {
+		public double Metal { get; set; }
+		public double Crystal { get; set; }
+		public double Deuterium { get; set; }
+		public long Honor { get; set; }
+	}
+
+	public class Auction {
+		public bool HasFinished { get; set; }
+		public long EndTime { get; set; }
+		public long NumBids { get; set; }
+		public long CurrentBid { get; set; }
+		public long AlreadyBid { get; set; }
+		public long MinimumBid { get; set; }
+		public long DeficitBid { get; set; }
+		public string HighestBidder { get; set; }
+		public long HighestBidderUserID { get; set; }
+		public string CurrentItem { get; set; }
+		public string CurrentItemLong { get; set; }
+		public long Inventory { get; set; }
+		public string Token { get; set; }
+		public ResourceMultiplier ResourceMultiplier { get; set; }
+		// TODO
+		//Resources map[string]interface{ }
+	}
 }
