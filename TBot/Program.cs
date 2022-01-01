@@ -122,6 +122,7 @@ namespace Tbot {
 					xaSem[Feature.BrainAutoMine] = new Semaphore(1, 1);
 					xaSem[Feature.BrainOfferOfTheDay] = new Semaphore(1, 1);
 					xaSem[Feature.AutoFarm] = new Semaphore(1, 1);
+					xaSem[Feature.AutoAuctioneer] = new Semaphore(1, 1);
 					xaSem[Feature.Expeditions] = new Semaphore(1, 1);
 					xaSem[Feature.Harvest] = new Semaphore(1, 1);
 					xaSem[Feature.Colonize] = new Semaphore(1, 1);
@@ -137,6 +138,7 @@ namespace Tbot {
 					features.AddOrUpdate(Feature.BrainOfferOfTheDay, false, HandleStartStopFeatures);
 					features.AddOrUpdate(Feature.BrainAutoResearch, false, HandleStartStopFeatures);
 					features.AddOrUpdate(Feature.AutoFarm, false, HandleStartStopFeatures);
+					features.AddOrUpdate(Feature.AutoAuctioneer, false, HandleStartStopFeatures);
 					features.AddOrUpdate(Feature.Expeditions, false, HandleStartStopFeatures);
 					features.AddOrUpdate(Feature.Colonize, false, HandleStartStopFeatures);
 					features.AddOrUpdate(Feature.Harvest, false, HandleStartStopFeatures);
@@ -192,6 +194,10 @@ namespace Tbot {
 					case Feature.AutoFarm:
 						if (currentValue)
 							StopAutoFarm();
+						return false;
+					case Feature.AutoAuctioneer:
+						if (currentValue)
+							StopAutoAuctioneer();
 						return false;
 					case Feature.Expeditions:
 						if (currentValue)
@@ -277,6 +283,15 @@ namespace Tbot {
 							StopBrainAutoResearch();
 						return false;
 					}
+				case Feature.AutoAuctioneer:
+					if ((bool) settings.AutoActioneer.Active) {
+						InitializeAutoAuctioneer();
+						return true;
+					} else {
+						if (currentValue)
+							StopAutoAuctioneer();
+						return false;
+					}
 				case Feature.AutoFarm:
 					if ((bool) settings.AutoFarm.Active) {
 						InitializeAutoFarm();
@@ -344,6 +359,7 @@ namespace Tbot {
 			features.AddOrUpdate(Feature.BrainAutoMine, false, HandleStartStopFeatures);
 			features.AddOrUpdate(Feature.BrainOfferOfTheDay, false, HandleStartStopFeatures);
 			features.AddOrUpdate(Feature.BrainAutoResearch, false, HandleStartStopFeatures);
+			features.AddOrUpdate(Feature.AutoAuctioneer, false, HandleStartStopFeatures);
 			features.AddOrUpdate(Feature.AutoFarm, false, HandleStartStopFeatures);
 			features.AddOrUpdate(Feature.Expeditions, false, HandleStartStopFeatures);
 			features.AddOrUpdate(Feature.Harvest, false, HandleStartStopFeatures);
@@ -711,6 +727,20 @@ namespace Tbot {
 			if (timers.TryGetValue("OfferOfTheDayTimer", out Timer value))
 				value.Dispose();
 			timers.Remove("OfferOfTheDayTimer");
+		}
+
+		private static void InitializeAutoAuctioneer() {
+			Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Initializing auctioneer...");
+			StopAutoAuctioneer(false);
+			timers.Add("AuctioneerTimer", new Timer(AutoAuctioneer, null, Helpers.CalcRandomInterval(IntervalType.AboutFiveMinutes), Timeout.Infinite));
+		}
+
+		private static void StopAutoAuctioneer(bool echo = true) {
+			if (echo)
+				Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Stopping auctioneer...");
+			if (timers.TryGetValue("AuctioneerTimer", out Timer value))
+				value.Dispose();
+			timers.Remove("AuctioneerTimer");
 		}
 
 		private static void InitializeBrainAutoResearch() {
@@ -1358,6 +1388,10 @@ namespace Tbot {
 					xaSem[Feature.Brain].Release();
 				}
 			}
+		}
+
+		private static void AutoAuctioneer(object state) {
+			// TODO: Implement auto auction.
 		}
 
 		private static void AutoResearch(object state) {

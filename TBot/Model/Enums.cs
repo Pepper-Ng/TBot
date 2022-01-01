@@ -257,6 +257,7 @@ namespace Tbot.Model {
 		SleepMode = 9,
 		BrainAutoResearch = 10,
 		Colonize = 11,
-		AutoFarm = 12
+		AutoFarm = 12,
+		AutoAuctioneer = 13
 	}
 }
