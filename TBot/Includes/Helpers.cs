@@ -28,6 +28,7 @@ namespace Tbot.Includes {
 					LogSender.Colonize => ConsoleColor.DarkRed,
 					LogSender.AutoFarm => ConsoleColor.DarkCyan,
 					LogSender.SleepMode => ConsoleColor.DarkBlue,
+					LogSender.Auctioneer => ConsoleColor.DarkGray,
 					LogSender.Tbot => ConsoleColor.DarkYellow,
 					_ => ConsoleColor.Gray
 				}

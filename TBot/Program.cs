@@ -1392,6 +1392,8 @@ namespace Tbot {
 
 		private static void AutoAuctioneer(object state) {
 			// TODO: Implement auto auction.
+			Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, "Initializing auctioneer...");
+
 		}
 
 		private static void AutoResearch(object state) {

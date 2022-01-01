@@ -241,7 +241,8 @@ namespace Tbot.Model {
 		FleetScheduler,
 		SleepMode,
 		Colonize,
-		AutoFarm
+		AutoFarm,
+		Auctioneer
 	}
 
 	public enum Feature {

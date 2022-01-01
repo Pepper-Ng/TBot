@@ -718,6 +718,9 @@ namespace Tbot.Services {
 			return this.GetGalaxyInfo(coordinate);
 		}
 
+		// TODO 	GET("/bot/get-auction")
+		// TODO		POST("/bot/do-auction")
+
 		public bool BuildCancelable(Celestial celestial, Buildables buildable) {
 			try {
 				var request = new RestRequest {
