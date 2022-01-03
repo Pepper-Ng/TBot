@@ -284,7 +284,7 @@ namespace Tbot {
 						return false;
 					}
 				case Feature.AutoAuctioneer:
-					if ((bool) settings.AutoActioneer.Active) {
+					if ((bool) settings.AutoAuctioneer.Active) {
 						InitializeAutoAuctioneer();
 						return true;
 					} else {
@@ -732,7 +732,7 @@ namespace Tbot {
 		private static void InitializeAutoAuctioneer() {
 			Helpers.WriteLog(LogType.Info, LogSender.Tbot, "Initializing auctioneer...");
 			StopAutoAuctioneer(false);
-			timers.Add("AuctioneerTimer", new Timer(AutoAuctioneer, null, Helpers.CalcRandomInterval(IntervalType.AboutFiveMinutes), Timeout.Infinite));
+			timers.Add("AuctioneerTimer", new Timer(AutoAuctioneer, null, Helpers.CalcRandomInterval(IntervalType.SomeSeconds), Timeout.Infinite));
 		}
 
 		private static void StopAutoAuctioneer(bool echo = true) {
@@ -1391,9 +1391,115 @@ namespace Tbot {
 		}
 
 		private static void AutoAuctioneer(object state) {
-			// TODO: Implement auto auction.
-			Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, "Initializing auctioneer...");
+			try {
+				xaSem[Feature.AutoAuctioneer].WaitOne();
 
+				if (isSleeping) {
+					Helpers.WriteLog(LogType.Info, LogSender.Brain, "Skipping auctioneer: Sleep Mode Active!");
+					return;
+				}
+
+				Auction currentAuction = ogamedService.GetAuction();
+				Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Auction {(currentAuction.HasFinished?"finished":"in progress")}: {currentAuction.CurrentItem}");
+
+				var time = GetDateTime();
+				var interval = currentAuction.EndTime * 1000;
+				var newTime = time;
+
+				if (currentAuction.HasFinished) {
+					interval = (currentAuction.EndTime + 35*60) * 1000;
+					newTime = time.AddMilliseconds(interval);
+				} else {
+					bool shouldBid = false;
+					foreach (var desired in settings.AutoAuctioneer.BidOnItems) {
+						if (desired != null && desired == currentAuction.CurrentItem) {
+							shouldBid = true;
+							break;
+						}
+					}
+
+					if (!shouldBid) {
+						interval = (currentAuction.EndTime + 55 * 60) * 1000;
+						newTime = time.AddMilliseconds(interval);
+						Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Undesired item, skipping auction.");
+					} else if (currentAuction.CurrentBid + 1000 > (long) settings.AutoAuctioneer.MaxBid) {
+						interval = (currentAuction.EndTime + 55 * 60) * 1000;
+						newTime = time.AddMilliseconds(interval);
+						Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Next required bid of {(currentAuction.CurrentBid + 1000)} is above maximum bid of {settings.AutoAuctioneer.MaxBid}. Skipping auction.");
+					} else if (currentAuction.EndTime > 5*60) {
+						interval = (currentAuction.EndTime - 5 * 60) * 1000;
+						newTime = time.AddMilliseconds(interval);
+						Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Current auction has {currentAuction.EndTime} seconds left, waiting until below 5 min.");
+					} else {
+						Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Less than 5 minutes until auction ends.");
+						if (currentAuction.HighestBidderUserID == userInfo.PlayerID) {
+							Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, "Currently the highest bidder.");
+						} else {
+							Resources bidResources = new Resources();
+							ResourceMultiplier multiplier = currentAuction.ResourceMultiplier;
+							if (settings.AutoAuctioneer.Resource == "Metal")
+								bidResources.Metal = (long) ((currentAuction.CurrentBid + 1000) / multiplier.Metal + 1);
+							if (settings.AutoAuctioneer.Resource == "Crystal")
+								bidResources.Crystal = (long) ((currentAuction.CurrentBid + 1000) / multiplier.Crystal + 1);
+							if (settings.AutoAuctioneer.Resource == "Deuterium")
+								bidResources.Deuterium = (long) ((currentAuction.CurrentBid + 1000) / multiplier.Deuterium + 1);
+
+							List<Celestial> bidCelestials = new();
+							try {
+								foreach (var origin in settings.AutoAuctioneer.Origin) {
+									Coordinate customOriginCoords = new(
+										(int) origin.Galaxy,
+										(int) origin.System,
+										(int) origin.Position,
+										Enum.Parse<Celestials>(origin.Type.ToString())
+									);
+									Celestial customOrigin = celestials
+										.Unique()
+										.Single(planet => planet.HasCoords(customOriginCoords));
+									bidCelestials.Add(customOrigin);
+								}
+							} catch (Exception e) {
+								Helpers.WriteLog(LogType.Debug, LogSender.Auctioneer, $"Exception: {e.Message}");
+								Helpers.WriteLog(LogType.Warning, LogSender.Auctioneer, $"Stacktrace: {e.StackTrace}");
+								Helpers.WriteLog(LogType.Warning, LogSender.Auctioneer, "Unable to parse custom origin");
+								bidCelestials = celestials;
+							}
+
+							var bidCelestial = bidCelestials.OrderByDescending(c => c.Resources.TotalResources).First();
+
+							// TODO: BUG - If already bid, take amount already bid in consideration.
+							if (!bidCelestial.Resources.IsEnoughFor(bidResources)) {
+								Helpers.WriteLog(LogType.Warning, LogSender.Auctioneer, "Unable to place bid, not enough resources.");
+							}
+
+							Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Placing bid of {bidResources.ToString()}");
+							ogamedService.DoAuction(bidCelestial.ID, bidResources);
+						}
+
+						interval = 10 * 1000;
+						newTime = time.AddMilliseconds(interval);
+					}
+				}
+
+				timers.GetValueOrDefault("AuctioneerTimer").Change(interval, Timeout.Infinite);
+				Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Next Auctioneer check at {newTime.ToString()}");
+				UpdateTitle();
+
+			} catch (Exception e) {
+				Helpers.WriteLog(LogType.Error, LogSender.Auctioneer, $"Auctioneer Exception: {e.Message}");
+				Helpers.WriteLog(LogType.Warning, LogSender.Auctioneer, $"Stacktrace: {e.StackTrace}");
+
+				var time = GetDateTime();
+				var interval = Helpers.CalcRandomInterval((int) settings.AutoAuctioneer.CheckIntervalMin, (int) settings.AutoAuctioneer.CheckIntervalMax);
+				if (interval <= 0)
+					interval = Helpers.CalcRandomInterval(IntervalType.SomeSeconds);
+				var newTime = time.AddMilliseconds(interval);
+				timers.GetValueOrDefault("AuctioneerTimer").Change(interval, Timeout.Infinite);
+				Helpers.WriteLog(LogType.Info, LogSender.Auctioneer, $"Next Auctioneer check at {newTime.ToString()}");
+				UpdateTitle();
+			} finally {
+				xaSem[Feature.AutoAuctioneer].Release();
+			}
 		}
 
 		private static void AutoResearch(object state) {
